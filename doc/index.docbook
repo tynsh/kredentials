@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<!DOCTYPE book PUBLIC "-//KDE//DTD DocBook XML V4.1.2-Based Variant V1.1//EN" "dtd/kdex.dtd" [
+<!DOCTYPE book PUBLIC "-//KDE//DTD DocBook XML V4.5-Based Variant V1.1//EN" "dtd/kdedbx45.dtd" [
   <!ENTITY kredentials "<application>kredentials 0&#46;1</application>">
   <!ENTITY kappname "&kredentials;"><!-- Do *not* replace kappname-->
   <!ENTITY package "kde-module"><!-- kdebase, kdeadmin, etc -->
@@ -15,24 +15,6 @@
      Removed "Revision history" section on 22 January 2001
      Changed to Installation/Help menu entities 18 October 2001
      Other minor cleanup and changes 18 October 2001 -->
-
-
-<!--
-This template was designed by: David Rugge davidrugge@mindspring.com
-with lots of help from: Eric Bischoff ebisch@cybercable.tm.fr
-and Frederik Fouvry fouvry@sfs.nphil.uni-tuebingen.de
-of the KDE DocBook team.
-
-You may freely use this template for writing any sort of KDE documentation.
-If you have any changes or improvements, please let us know.
-
-Remember:
-- in XML, the case of the <tags> and attributes is relevant ;
-- also, quote all attributes.
-
-Please don't forget to remove all these comments in your final documentation,
-thanks ;-).
--->
 
 <!-- ................................................................ -->
 
@@ -200,9 +182,13 @@ Program copyright 2004-2007 Noah Meyerhans <email>noahm&#64;csail&#46;mit&#46;ed
 <para>
 Contributors:
 <itemizedlist>
+<listitem><para>Hai Zaar <email>haizaar@gmail.com</email></para>
+</listitem>
 <listitem><para>Mike Oltmans <email>moltmans@csail.mit.edu</email></para>
 </listitem>
 <listitem><para>Martin Ginkel <email>mginkel@mpi-magdeburg.mpg.de</email></para>
+</listitem>
+<listitem><para>Tobias Wackenhut <email>tobias@wackenhut.at</email></para>
 </listitem>
 </itemizedlist>
 </para>
@@ -250,22 +236,16 @@ information here.
 -->
 
 <para>
-In order to successfully use &kredentials;, you need &kde; 3. Foobar.lib is
-required in order to support the advanced &kredentials; features. &kredentials; uses
-about 5 megs of memory to run, but this may vary depending on your
+In order to successfully use &kredentials;, you need &kde; 5. &kredentials;
+uses about 5 megs of memory to run, but this may vary depending on your
 platform and configuration.
-</para>
-
-<para>
-All required libraries as well as &kredentials; itself can be found
-on <ulink url="ftp://ftp.kredentials.org">The &kredentials; home page</ulink>.
 </para>
 
 <!-- For a list of updates, you may refer to the application web site
 or the ChangeLog file, or ... -->
 <para>
 You can find a list of changes at <ulink
-url="http://apps.kde.org/kredentials">http://apps.kde.org/kredentials</ulink>.
+url="https://github.com/nmeyerhans/kredentials/blob/master/ChangeLog">https://github.com/nmeyerhans/kredentials/blob/master/ChangeLog</ulink>.
 </para>
 </sect1>
 
@@ -277,14 +257,6 @@ url="http://apps.kde.org/kredentials">http://apps.kde.org/kredentials</ulink>.
 <!-- special handling, remove it, and replace with your own text. -->
 
 &install.compile.documentation;
-
-</sect1>
-
-<sect1 id="configuration">
-<title>Configuration</title>
-
-<para>Don't forget to tell your system to start the <filename>dtd</filename>
-dicer-toaster daemon first, or &kredentials; won't work !</para>
 
 </sect1>
 
