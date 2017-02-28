@@ -21,38 +21,37 @@
  */
 
 #include "kredentials.h"
-#include <kuniqueapplication.h>
+#include <QApplication.h>
 #include <kaboutdata.h>
 #include <kcmdlineargs.h>
 #include <klocale.h>
-#include <QDebug.h>
 #include <kmainwindow.h>
 
 static const char version[] = "2.0-alpha";
 
 int main(int argc, char **argv)
 {
-    KAboutData about("kredentials",
-		     "kredentials",
-		     ki18n("kredentials"),
-		     version,
-		     ki18n("Monitor and update authentication tokens"),
-		     KAboutData::License_Custom, 
-		     ki18n("(C) 2004 Noah Meyerhans"));
-    about.addAuthor( ki18n("Noah Meyerhans"), ki18n("developer"), 
-		     "noahm@csail.mit.edu", 0 );
-    KCmdLineArgs::init(argc, argv, &about);
-    KCmdLineOptions options;
-    options.add("i").add("inform", 
-			 ki18n("Inform the user when credentials are renewed"));
-    options.add("d").add("disable-aklog", 
-			 ki18n("Don't run aklog after renewing Kerberos tickets"));
-    KCmdLineArgs::addCmdLineOptions( options );
-    KUniqueApplication::addCmdLineOptions();
+	KAboutData about("kredentials",
+		"kredentials",
+		ki18n("kredentials"),
+		version,
+		ki18n("Monitor and update authentication tokens"),
+		KAboutData::License_Custom, 
+		ki18n("(C) 2004 Noah Meyerhans"));
+	about.addAuthor( ki18n("Noah Meyerhans"), ki18n("developer"), 
+		"noahm@csail.mit.edu", 0 );
+	KCmdLineArgs::init(argc, argv, &about);
+	KCmdLineOptions options;
+	options.add("i").add("inform", 
+		 ki18n("Inform the user when credentials are renewed"));
+	options.add("d").add("disable-aklog", 
+		 ki18n("Don't run aklog after renewing Kerberos tickets"));
+	KCmdLineArgs::addCmdLineOptions( options );
+	KUniqueApplication::addCmdLineOptions();
 
 	if (!KUniqueApplication::start()) {
-	    kError() << "Kredentials is already running!";
-	    exit(0);
+		kError() << "Kredentials is already running!";
+		exit(0);
 	}
 
 	KCmdLineArgs *args = KCmdLineArgs::parsedArgs();
@@ -65,7 +64,7 @@ int main(int argc, char **argv)
 	k_obj = new kredentials();
 	if(args->isSet("inform"))
 	{
-	    k_obj->setDoNotify(true);
+		k_obj->setDoNotify(true);
 	}
 	if(args->isSet("disable-aklog"))
 	{
