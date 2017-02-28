@@ -25,7 +25,7 @@
 #include <kaboutdata.h>
 #include <kcmdlineargs.h>
 #include <klocale.h>
-#include <kdebug.h>
+#include <QDebug.h>
 #include <kmainwindow.h>
 
 static const char version[] = "2.0-alpha";

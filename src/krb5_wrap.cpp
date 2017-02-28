@@ -21,7 +21,7 @@
  * $Id$
  */
 
-#include <KDebug>
+#include <QDebug>
 #include <krb5_wrap.h>
 #include <cstdio>
 #include <iostream>
@@ -30,9 +30,9 @@
 #include <pwd.h>
 
 #ifndef NDEBUG
-  #define LOG kDebug()
+  #define LOG qDebug()
 #else
-  #define LOG kDebugDevNull()
+  #define LOG qDebug().setVerbosity(0)
 #endif
 
 namespace krb5{
@@ -430,7 +430,6 @@ namespace krb5{
     bool tixmgr::initKerberos(){
 	kerror = 0;
 	ctx.reinit();
-	kDebug();
 	if((kerror=ctx.error())){
 	    LOG << "Kerberos returned on context reinit" << kerror;
 	    return FALSE;

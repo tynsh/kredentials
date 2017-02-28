@@ -24,7 +24,7 @@
 #include "kredentials.h"
 
 #include <klocale.h>
-#include <kdebug.h>
+#include <QDebug.h>
 #include <kpassworddialog.h>
 #include <kmessagebox.h>
 
@@ -44,7 +44,7 @@
 #ifndef NDEBUG
 #define DEFAULT_RENEWAL_INTERVAL 20
 #define DEFAULT_WARNING_INTERVAL 3600
-#define LOG kDebug()
+#define LOG qDebug()
 #else
 /* These intervals really need to be configurable.  In some locations
  * new tickets need to be obtained every day, while others grant
@@ -54,7 +54,7 @@
  */
 #define DEFAULT_RENEWAL_INTERVAL 3600
 #define DEFAULT_WARNING_INTERVAL 86400
-#define LOG kDebugDevNull()
+#define LOG qDebug().setVerbosity(0)
 #endif /*DEBUG*/
 
 kredentials::kredentials(int notify)
