@@ -7,3 +7,4 @@ Icon=kredentials
 Type=Application
 Comment=Panel Applet to renew authentication credentials
 X-KDE-StartupNotify=false
+X-DBUS-ServiceName=org.kde.kredentials
