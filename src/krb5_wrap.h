@@ -38,19 +38,19 @@ namespace krb5{
      */
     class base{
     protected: 
-	/**
-	   errorcode of last krb5_xxx operation
-	 */
-	krb5_error_code kerror;
+        /**
+           errorcode of last krb5_xxx operation
+         */
+        krb5_error_code kerror;
     public:
-	/**
-	   initialize error to 0
-	 */
-	base():kerror(0){};
-	/**
-	   get the error of last operation
-	 */
-	krb5_error_code error() const;
+        /**
+           initialize error to 0
+         */
+        base() : kerror(0){}
+        /**
+           get the error of last operation
+         */
+        krb5_error_code error() const;
     };
 
     /**
@@ -58,13 +58,13 @@ namespace krb5{
      */
     class context: public virtual base{
     private:
-	krb5_context _ctx;
+        krb5_context _ctx;
 
     public:
-	context();
-	virtual ~context();
-	krb5_context operator() () const;
-	void reinit();
+        context();
+        virtual ~context();
+        krb5_context operator() () const;
+        void reinit();
     };
 
     class ccache;
@@ -72,123 +72,119 @@ namespace krb5{
     /**
        wrapper for krb5_creds
      */
-    class creds: public virtual base{
+    class creds : public virtual base{
     private:
-	context& ctx;
-	krb5_creds * _creds;
-	principal * server;
-    public:
-	creds(context& _ctx);
-	// Take given creds and own them!
-	creds(context& _ctx,krb5_creds* o);
-	// Dont use, bug? in krb5_copy_creds
-	creds(const creds& o);
-
-	virtual ~creds();
-
-	const krb5_creds * operator() () const;
-	context& getCtx() const;
-	const principal* getServer() const;
-	long getStartTime() const;
-	long getEndTime() const;
-	long getRenewTill() const;
-	
-	void clear();
-	krb5_creds * operator() () ;
-	// Dont use, bug? in krb5_copy_creds
-	creds& operator= (const creds& o);
-	void calcServer();
-    };
-
-    class principal: public virtual base{
-    private:
-	bool free;
-	context& ctx;
-	krb5_principal  _principal;
+        context& ctx;
+        krb5_creds * _creds;
+        principal * server;
 
     public:
-	principal(context& _ctx, ccache& _cc);
-	principal(principal& o);
-	principal(context& _ctx,krb5_principal p, bool copy=false);
-	virtual ~principal();
-	krb5_principal operator() ();
+        creds(context& _ctx);
+        // Take given creds and own them!
+        creds(context& _ctx,krb5_creds* o);
+        // Dont use, bug? in krb5_copy_creds
+        creds(const creds& o);
 
-	context& getCtx() const;
-	const char* getRealm() const;
-	int getDataLength() const ;
-	const std::string getData(const int i) const; 
-	const std::string getName() const;
+        virtual ~creds();
+
+        const krb5_creds * operator() () const;
+        context& getCtx() const;
+        const principal* getServer() const;
+        long getStartTime() const;
+        long getEndTime() const;
+        long getRenewTill() const;
+
+        void clear();
+        krb5_creds * operator() () ;
+        // Dont use, bug? in krb5_copy_creds
+        creds& operator= (const creds& o);
+        void calcServer();
     };
 
-    class ccIter: public virtual base{
+    class principal : public virtual base{
     private:
-	ccache& cc;
-	krb5_cc_cursor cur;
-	creds * pcreds;
-	void next();
-    public:
-	ccIter(ccache& _cc);
-	virtual ~ccIter();
-	const creds& operator*();
-	ccIter& operator++(int dummy);
+        bool free;
+        context& ctx;
+        krb5_principal  _principal;
 
+    public:
+        principal(context& _ctx, ccache& _cc);
+        principal(principal& o);
+        principal(context& _ctx,krb5_principal p, bool copy=false);
+        virtual ~principal();
+        krb5_principal operator() ();
+
+        context& getCtx() const;
+        const char* getRealm() const;
+        int getDataLength() const ;
+        const std::string getData(const int i) const;
+        const std::string getName() const;
     };
 
-    class ccache: public virtual base{
+    class ccIter : public virtual base{
     private:
-	krb5_ccache   _cc;
-	context&      ctx;
-	std::string _name;
-	principal*  _principal;
-	creds*      _creds;
+        ccache& cc;
+        krb5_cc_cursor cur;
+        creds * pcreds;
+        void next();
+
     public:
-	ccache(context& _ctx);
-	virtual ~ccache();
-	krb5_ccache operator() () const;
-	context& getCtx() const;
-	ccIter iterator();
-	const std::string& name();
-	void store(creds& creds);
-	void setPrincipal(principal& me);
-	principal* getPrincipal();
-	creds& renew_creds();
-	ccache& operator=(const ccache& o);
-	void destroy();
+        ccIter(ccache& _cc);
+        virtual ~ccIter();
+        const creds& operator*();
+        ccIter& operator++(int dummy);
     };
 
-    class tixmgr:public virtual base{
-	
+    class ccache : public virtual base{
+    private:
+        krb5_ccache   _cc;
+        context&      ctx;
+        std::string _name;
+        principal*  _principal;
+        creds*      _creds;
+
+    public:
+        ccache(context& _ctx);
+        virtual ~ccache();
+        krb5_ccache operator() () const;
+        context& getCtx() const;
+        ccIter iterator();
+        const std::string& name();
+        void store(creds& creds);
+        void setPrincipal(principal& me);
+        principal* getPrincipal();
+        creds& renew_creds();
+        ccache& operator=(const ccache& o);
+        void destroy();
+    };
+
+    class tixmgr : public virtual base{
     protected:
-
-	bool doAklog;
-	int kerror;
-	int authenticated;
-	time_t tktExpirationTime;
-	time_t tktRenewableExpirationTime;
-	context ctx;
-	ccache cc;
-
+        bool doAklog;
+        int kerror;
+        int authenticated;
+        time_t tktExpirationTime;
+        time_t tktRenewableExpirationTime;
+        context ctx;
+        ccache cc;
 
     public:
-	tixmgr(bool _doAklog=TRUE);
-	virtual ~tixmgr();
-	std::string readPass(int length=1024);
-	/**
-	   return a fresh principal from the user-info of the OS
-	 */
-	virtual principal* osPrincipal();
- 	virtual bool renewTickets();
-	virtual bool hasCurrentTickets();
-	virtual bool initKerberos();
-	virtual bool passGetCreds(const std::string& pass);
-	virtual bool setDoAklog(bool);
-	virtual bool runAklog();
-	virtual bool runUnlog();
-	virtual bool destroyTickets();
+        tixmgr(bool _doAklog=TRUE);
+        virtual ~tixmgr();
+        std::string readPass(int length=1024);
+        /**
+           return a fresh principal from the user-info of the OS
+         */
+        virtual principal* osPrincipal();
+        virtual bool renewTickets();
+        virtual bool hasCurrentTickets();
+        virtual bool initKerberos();
+        virtual bool passGetCreds(const std::string& pass);
+        virtual bool setDoAklog(bool);
+        virtual bool runAklog();
+        virtual bool runUnlog();
+        virtual bool destroyTickets();
     };
-
-
-
 }
 
 #endif

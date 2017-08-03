@@ -21,10 +21,13 @@
  */
 
 #include "kredentials.h"
+
+#include <KAboutData>
+#include <KDBusService>
+
 #include <QApplication>
 #include <QCommandLineParser>
-#include <KAboutData>
-#include <KLocalizedString>
+#include <QObject>
 
 static const char version[] = "2.0-alpha";
 
@@ -32,55 +35,56 @@ int main(int argc, char **argv)
 {
 	QApplication app(argc, argv);
 
-	app.setOrganizationDomain("org.kde");
-	app.desktopFileName("org.kde.kredentials.desktop");
+    app.setOrganizationDomain("org.kde");
+    app.setDesktopFileName(QString("org.kde.kredentials.desktop"));
 
-	KAboutData about("kredentials",
-		"kredentials",
-		i18n("kredentials"),
+    KDBusService service(KDBusService::Unique);
+
+    KAboutData about(QObject::tr("kredentials"),
+        QObject::tr("kredentials"),
 		version,
-		i18n("Monitor and update authentication tokens"),
-		KAboutData::License_Custom, 
-		i18n("(C) 2004 Noah Meyerhans"));
-	about.addAuthor( i18n("Noah Meyerhans"), i18n("developer"), 
+        QObject::tr("Monitor and update authentication tokens"),
+        KAboutLicense::Custom,
+        QObject::tr("(C) 2004 Noah Meyerhans"));
+
+    about.addAuthor( QObject::tr("Noah Meyerhans"), QObject::tr("developer"),
 		"noahm@csail.mit.edu", 0 );
-	KAboutData::setApplicationData(aboutData);
+
+    KAboutData::setApplicationData(about);
 
 	QCommandLineParser parser;
-	parser.setApplicationDescription(i18n("Monitor and update authentication tokens"));
+    parser.setApplicationDescription(QObject::tr("Monitor and update authentication tokens"));
 	parser.addHelpOption();
 	parser.addVersionOption();
 	
-	QCommandLineOption informOption(QStringList() << "i" << "inform", i18n("Inform the user when credentials are renewed"));
+    QCommandLineOption informOption(QStringList() << "i" << "inform", "Inform the user when credentials are renewed");
 	parser.addOption(informOption);
-	QCommandLineOption disableAklogOption(QStringList() << "d" << "disable-aklog", i18n("Don't run aklog after renewing Kerberos tickets"));
+    QCommandLineOption disableAklogOption(QStringList() << "d" << "disable-aklog", "Don't run aklog after renewing Kerberos tickets");
 	parser.addOption(disableAklogOption);
 
-	aboutData.setupCommandLine(&parser);
+    about.setupCommandLine(&parser);
 	parser.process(app);
-	aboutData.processCommandLine(&parser);
+    about.processCommandLine(&parser);
 
 	// try to bind to the dbus name and if it fails return 0
 	// TODO
 	//if (!KUniqueApplication::start()) {
 	//	kError() << "Kredentials is already running!";
 	//	exit(0);
-	//}
-
-	MainWindow* mw = new MainWindow();
-	mw->setObjectName("kredentials");
+    //}
 
 	kredentials* k_obj = new kredentials();
-	if(parser.isSet(informOption))
-	{
+    if(parser.isSet(informOption)){
 		k_obj->setDoNotify(true);
 	}
-	if(parser.isSet(disableAklogOption))
-	{
+
+    if(parser.isSet(disableAklogOption)) {
 		k_obj->setDoAklog(false);
 	}
 
-	k_obj->show();
+    app.setQuitOnLastWindowClosed(false);
+
+    k_obj->show();
 
     return app.exec();
 }

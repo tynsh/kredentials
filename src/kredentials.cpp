@@ -22,13 +22,6 @@
  */
 
 #include "kredentials.h"
-#include <klocalizedstring.h>
-#include <QDebug.h>
-#include <kpassworddialog.h>
-// TODO: this now returnes eneums instead of ints. Have to change for future
-// compatibility
-#include <kmessagebox.h>
-// TODO: probably same problem here
 
 // XXX TEMPORARILY disable dcop stuff while porting to KDE4
 #if 0
@@ -36,10 +29,14 @@
 #include <dcopref.h>
 #endif
 
-#include <time.h>
-#include <string.h>
 #include <iostream>
 #include <memory>
+#include <string>
+#include <time.h>
+
+#include <kpassworddialog.h>
+
+#include <QMenu>
 
 #ifndef NDEBUG
 #define DEFAULT_RENEWAL_INTERVAL 20
@@ -57,44 +54,51 @@
 #define LOG qDebug().setVerbosity(0)
 #endif /*DEBUG*/
 
-kredentials::kredentials(int notify)
-    : KSystemTrayIcon(),tixmgr(){
+kredentials::kredentials(int notify) {
+
+    QSystemTrayIcon();
+    tixmgr();
     // set the shell's ui resource file
     //setXMLFile("kredentialsui.rc");
 
     LOG << "kredentials constructor called" << kerror;
 
+    ctxMenu = new QMenu("MenuBar");
+    this->setContextMenu(ctxMenu);
+
     doNotify = notify;
     renewWarningTime = DEFAULT_WARNING_INTERVAL;
     secondsToNextRenewal = DEFAULT_RENEWAL_INTERVAL;
     renewWarningFlag = 0;
-    this->setIcon(this->loadIcon("kredentials"));
+    this->setIcon(QIcon(":/resources/kerberos.png"));
 
-    config = KGlobal::config();	
+    config = KSharedConfig::openConfig();
     generalConfigGroup = KConfigGroup(config, "General");
     setDoAklog(generalConfigGroup.readEntry("RunAklog", true));
 
-    renewAct = new KAction(KIcon("1rightarrow"), ki18n("Renew credentials"), this);
+    renewAct = new QAction(QIcon("1rightarrow"), tr("Renew credentials"), this);
     connect(renewAct, SIGNAL(triggered()), this, SLOT(tryRenewTickets()));
-    contextMenu()->addAction(renewAct);
+    ctxMenu->addAction(renewAct);
 
-    freshTixAct = new KAction(KIcon(""), ki18n("&Get new credentials"), this);
+    freshTixAct = new QAction(QIcon(""), tr("&Get new credentials"), this);
     connect(freshTixAct, SIGNAL(triggered()), this, SLOT(tryPassGetTickets()));
-    contextMenu()->addAction(freshTixAct);
+    ctxMenu->addAction(freshTixAct);
 	
-    statusAct = new KAction(KIcon(""), ki18n("&Credential Status"), this);
+    statusAct = new QAction(QIcon(""), tr("&Credential Status"), this);
     connect(statusAct, SIGNAL(triggered()), this, SLOT(showTicketCache()));
-    contextMenu()->addAction(statusAct);
+    ctxMenu->addAction(statusAct);
 
-    destroyAct = new KAction(KIcon(""), ki18n("&Destroy credentials"), this);
+    destroyAct = new QAction(QIcon(""), tr("&Destroy credentials"), this);
     connect(destroyAct, SIGNAL(triggered()), this, SLOT(destroyTickets()));
-    contextMenu()->addAction(destroyAct);
+    ctxMenu->addAction(destroyAct);
 
-    toggleAklogAct = new KToggleAction(ki18n("&Renew AFS tokens"), this);
+    toggleAklogAct = new QAction(tr("&Renew AFS tokens"), this);
+    toggleAklogAct->setCheckable(true);
+
+    //toggleAklogAct = new KToggleAction(tr("&Renew AFS tokens"), this);
     connect(toggleAklogAct, SIGNAL(triggered()), this, SLOT(prefsAklog()));
     toggleAklogAct->setChecked(doAklog);
-    //toggleAklogAct->slotToggled(doAklog);
-    contextMenu()->addAction(toggleAklogAct);
+    ctxMenu->addAction(toggleAklogAct);
 
     hasCurrentTickets();
 	
@@ -104,7 +108,6 @@ kredentials::kredentials(int notify)
 
     LOG << "Using Kerberos KRB5CCNAME of" << cc.name().c_str();
     LOG << "kredentials constructor returning";
-
 }
 
 kredentials::~kredentials()
@@ -121,10 +124,9 @@ void kredentials::prefsAklog() {
 bool kredentials::destroyTickets(){
     bool res=FALSE;
     if(!(res=tixmgr::destroyTickets())){
-	KMessageBox::sorry(0, ki18n("Unable to destroy your tickets."), 0, 0);
+        QMessageBox::warning(dynamic_cast<QWidget*>(this), title, tr("Unable to destroy your tickets."));
     }else{
-	KMessageBox::information(0,ki18n("Your tickets have been destroyed."), 
-				 0, 0);
+        QMessageBox::information(dynamic_cast<QWidget*>(this), title, tr("Your tickets have been destroyed."));
     }
     return res;
 }
@@ -132,16 +134,16 @@ bool kredentials::destroyTickets(){
 void kredentials::tryPassGetTickets(){
     QString password;
     QString prompt = QString("Please give the password for ");
-    std::auto_ptr<krb5::principal> osMe(NULL);
+    std::shared_ptr<krb5::principal> osMe(NULL);
     krb5::principal* pme=cc.getPrincipal();
     if(!pme){
-	osMe.reset(osPrincipal());
-	pme=osMe.get();
+        osMe.reset(osPrincipal());
+        pme=osMe.get();
     }
     if(pme){
-	prompt.append(QString(pme->getName().c_str()));
+        prompt.append(QString(pme->getName().c_str()));
     }else{
-	prompt.append(QString("unknown user"));
+        prompt.append(QString("unknown user"));
     }
     timer->stop();
     LOG << "Getting Pass";
@@ -149,30 +151,29 @@ void kredentials::tryPassGetTickets(){
     KPasswordDialog *dlg = new KPasswordDialog(NULL, 0);
     dlg->setPrompt(prompt);
     if(!dlg->exec()) {
-	// User hit cancel, or something
-	return;
+        // User hit cancel, or something
+        return;
     }
 
-    while (1) // infinite loop until receives a valid password
-    {
-	std::string pass(dlg->password().toAscii());
-	LOG << "Getting Creds";
-	bool res=passGetCreds(pass);
-	LOG << "Finished Creds";
-	if(!res){
-	    KMessageBox::sorry(0, ki18n("Your password was probably wrong"), 0, 0);
-
-	    break; // I'll try again
-	}else{
-	    hasCurrentTickets();
-	    if( !runAklog() ){
-		KMessageBox::sorry(0, ki18n("Unable to run aklog"), 0, 0);
-	    }
-	    timer->start(1000);
-	    //that's it
-	    break;
-	}
+    while (1) { // infinite loop until receives a valid password
+        std::string pass(dlg->password().toLatin1());
+        LOG << "Getting Creds";
+        bool res=passGetCreds(pass);
+        LOG << "Finished Creds";
+        if(!res){
+            QMessageBox::warning(dynamic_cast<QWidget*>(this), title, tr("Your password was probably wrong"));
+            break; // I'll try again
+        }else{
+            hasCurrentTickets();
+            if( !runAklog() ){
+                QMessageBox::warning(dynamic_cast<QWidget*>(this), title, tr("Unable to run aklog"));
+            }
+            timer->start(1000);
+            //that's it
+            break;
+        }
     }
+
     delete dlg;
     return;
 }
@@ -201,142 +202,118 @@ void kredentials::tryPassGetTicketsScreenSaverSafe(){
 	tryPassGetTickets();
 }
 
-
-
-void kredentials::tryRenewTickets()
-{
+void kredentials::tryRenewTickets(){
     time_t now = time(0);
     timer->stop();
 
     if(!hasCurrentTickets()){
-	tryPassGetTicketsScreenSaverSafe();
+        tryPassGetTicketsScreenSaverSafe();
     }else if(tktRenewableExpirationTime == 0){
-	// can not be renewed
-	// check if it will expire soon 
-	if ( tktExpirationTime - now < renewWarningTime)
-		tryPassGetTicketsScreenSaverSafe();
-    }
-    else if(tktRenewableExpirationTime < now)
-    {
-	KMessageBox::information(0, "Your tickets have outlived their renewable lifetime and can't be renewed.", 0, 0);
-	LOG << "tktRenewableExpirationTime has passed:"
-	    << "tktRenewableExpirationTime = " << 
-	    tktRenewableExpirationTime << ", now = " << now;
-	tryPassGetTicketsScreenSaverSafe();
-    }
-    else if(!renewTickets())
-    {
-	LOG << "renewTickets did not get new tickets";
+        // can not be renewed
+        // check if it will expire soon
+        if ( tktExpirationTime - now < renewWarningTime)
+            tryPassGetTicketsScreenSaverSafe();
+    }else if(tktRenewableExpirationTime < now){
+        QMessageBox::information(dynamic_cast<QWidget*>(this), title,
+                                 tr("Your tickets have outlived their renewable lifetime and can't be renewed."));
+        LOG << "tktRenewableExpirationTime has passed:"
+            << "tktRenewableExpirationTime = " <<
+            tktRenewableExpirationTime << ", now = " << now;
+        tryPassGetTicketsScreenSaverSafe();
+    }else if(!renewTickets()){
+        LOG << "renewTickets did not get new tickets";
 
-
-	if(!hasCurrentTickets()){
-	    tryPassGetTicketsScreenSaverSafe();
-	}
-    }
-    else
-    {
-	if(doNotify){
-	    showMessage("kredentials",
-			"Successfully renewed Kerberos tickets",
-			QSystemTrayIcon::Information,
-			3000);
-	}
+        if(!hasCurrentTickets()){
+            tryPassGetTicketsScreenSaverSafe();
+        }
+    }else{
+        if(doNotify){
+            showMessage("kredentials",
+                "Successfully renewed Kerberos tickets",
+                QSystemTrayIcon::Information,
+                3000);
+        }
     }
     // restart the timer here, regardless of whether we currently
     // have tickets now or not.  The user may get tickets before
     // the next timeout, and we need to be able to renew them
     secondsToNextRenewal = DEFAULT_RENEWAL_INTERVAL;
     timer->start(1000);
+
     if(authenticated > 0){
-	if( !runAklog() ){
-	    KMessageBox::sorry(0, "Unable to run aklog", 0, 0);
-	}
-		
-	LOG << "WarnTime: " << renewWarningTime << doNotify;
-	if(doNotify && 
-	   tktRenewableExpirationTime - now < renewWarningTime &&
-	   tktRenewableExpirationTime!=0)
-	{
-	    LOG << "Renew=" << renewWarningFlag;
-	    if(renewWarningFlag == 0) {
-		renewWarningFlag = 1;
-		LOG << "RESET: Renew=" << renewWarningFlag;
+        if( !runAklog() ){
+            QMessageBox::warning(dynamic_cast<QWidget*>(this), title, tr("Unable to run aklog"));
+        }
 
-		QString msgString = 
-		    QString("Kerberos tickets will permanently expire on ")
-		    +  QString(ctime(&tktRenewableExpirationTime)) +
-		    QString(" You may want to renew them now.");
-		KMessageBox::information(0, msgString, 0, 0);
-	    }
+        LOG << "WarnTime: " << renewWarningTime << doNotify;
+        if(doNotify &&
+           tktRenewableExpirationTime - now < renewWarningTime &&
+           tktRenewableExpirationTime!=0)
+        {
+            LOG << "Renew=" << renewWarningFlag;
+            if(renewWarningFlag == 0) {
+                renewWarningFlag = 1;
+                LOG << "RESET: Renew=" << renewWarningFlag;
 
-	}
-	else 
-	{
-	    renewWarningFlag = 0;
-	    LOG << "RESET: Renew=" << renewWarningFlag;
-	}
+                QString msgString =
+                    QString("Kerberos tickets will permanently expire on ")
+                    +  QString(ctime(&tktRenewableExpirationTime)) +
+                    QString(" You may want to renew them now.");
+                QMessageBox::information(dynamic_cast<QWidget*>(this), title, msgString);
+            }
+
+        }else{
+            renewWarningFlag = 0;
+            LOG << "RESET: Renew=" << renewWarningFlag;
+        }
     }
     return;
 }
 
-
-
-void kredentials::ticketTimerEvent()
-{
-
+void kredentials::ticketTimerEvent(){
     LOG << "ticketTimerEvent triggered, secondsToNextRenewal ==" 
 	<< secondsToNextRenewal;
 
-    secondsToNextRenewal--;
-    if(secondsToNextRenewal < 0)
-    {
-	tryRenewTickets();
+    --secondsToNextRenewal;
+    if(secondsToNextRenewal < 0) {
+        tryRenewTickets();
     }
     return;
 }
 
-void kredentials::showTicketCache()
-{
+void kredentials::showTicketCache(){
     hasCurrentTickets();
     QString msgString;
 	
-    if(!authenticated)
-    {
-	KMessageBox::information(0, 
-				 "You do not have any valid tickets.", 
-				 "Kerberos", 0, 0);
-    }
-    else
-    {
-	const krb5::principal* pme=cc.getPrincipal();
-	if(pme){
-	    const krb5::principal& me=*pme;
-	    if(me.getDataLength()){
-		msgString = QString("Your tickets as ")
-		    +QString(me.getName().c_str())+QString(" ");
-	    }else{
-		msgString = QString("Your tickets ");
-	    }
-	}
-	msgString+=QString("are\n Valid until ") + 
-	    QString(ctime(&tktExpirationTime));
-	if(tktRenewableExpirationTime > time(0))
-	{
-	    msgString += QString("\nRenewable until ") + 
-		QString(ctime(&tktRenewableExpirationTime));
-	}
-	else
-	{
-	    msgString += QString("\nTickets are not renewable");
-	}
-	KMessageBox::information(0, msgString, "Kerberos", 0, 0);
+    if(!authenticated){
+        QMessageBox::information(dynamic_cast<QWidget*>(this), title, tr("You do not have any valid tickets."));
+    }else{
+        const krb5::principal* pme=cc.getPrincipal();
+        if(pme){
+            const krb5::principal& me=*pme;
+            if(me.getDataLength()){
+                msgString = QString("Your tickets as ")
+                    +QString(me.getName().c_str())+QString(" ");
+            }else{
+                msgString = QString("Your tickets ");
+            }
+        }
+
+        msgString+=QString("are\n Valid until ") +
+            QString(ctime(&tktExpirationTime));
+        if(tktRenewableExpirationTime > time(0)) {
+            msgString += QString("\nRenewable until ") +
+            QString(ctime(&tktRenewableExpirationTime));
+        }else{
+            msgString += QString("\nTickets are not renewable");
+        }
+
+        //QMessageBox(this, QMessageBox::Information, "Kerberos", msgString);
+        QMessageBox::information(dynamic_cast<QWidget*>(this), title, msgString);
     }
     return;
 }
 
-void kredentials::setDoNotify(int state)
-{
+void kredentials::setDoNotify(int state){
     doNotify = state;
 }
-
-#include "kredentials.moc"

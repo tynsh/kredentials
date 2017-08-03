@@ -35,8 +35,10 @@ find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
 # Find KDE modules
 find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
     CoreAddons      # KAboutData
-    I18n            # KLocalizedString
-    WidgetsAddons   # KMessageBox
+    WidgetsAddons   # kpassworddialog
+    Config
+    DBusAddons
+
 )
 
 feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)

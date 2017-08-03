@@ -28,41 +28,38 @@
 #include <config.h>
 #endif
 
-#include <qtimer.h>
-
-#include <kmenu.h> // TODO all of these includes
-//#include <ksystemtrayicon.h>
-#include <QSystemTrayIcon>
-
-#include <kuser.h>
-#include <kaction.h>
-#include <kcomponentdata.h>
-#include <kconfig.h>
-#include <kglobal.h>
-#include <kconfiggroup.h>
-#include <ktoggleaction.h>
-
-#include <time.h>
 #include "krb5_wrap.h"
+#include <time.h>
+
+#include <QAction>
+#include <QDebug>
+#include <QMessageBox>
+#include <QSystemTrayIcon>
+#include <QTimer>
+
+#include <kconfiggroup.h>
+#include <kuser.h>
+#include <KSharedConfig>
+
 /**
  * @short Application Main Window
  * @author Noah Meyerhans <noahm@csail.mit.edu>
  * @version 0.9.2
  */
-class kredentials : public KSystemTrayIcon,public krb5::tixmgr
+class kredentials : public QSystemTrayIcon, public krb5::tixmgr
 {
     Q_OBJECT
 public:
     /**
-     * Default Constructor
+     * Constructor
      */
-    //kredentials();
 	kredentials( int doNotify=0 );
 	
     /**
-     * Default Destructor
+     * Destructor
      */
     virtual ~kredentials();
+
 	void setDoNotify(int);
 	
 protected slots:
@@ -79,20 +76,21 @@ protected:
 
 private:
 	int secondsToNextRenewal;
-        int renewWarningFlag;
-        int renewWarningTime;
-	KSharedConfigPtr config;
-	KConfigGroup generalConfigGroup;
+    int renewWarningFlag;
+    int renewWarningTime;
+    KSharedConfigPtr config;
+    KConfigGroup generalConfigGroup;
 
 	KUser *kerberosUser;
-	KAction *renewAct, *reInitAct, *statusAct, *destroyAct, *freshTixAct;
-	KAction *quitAct;
-	KToggleAction *toggleAklogAct;
+    QAction *renewAct, *reInitAct, *statusAct, *destroyAct, *freshTixAct;
+    QAction *quitAct;
+    QAction *toggleAklogAct;
 	QPixmap panelIcon;
 	QTimer *timer;
+    QMenu * ctxMenu;
+    const QString title = "Kerberos";
 
 	int doNotify;
-
 };
 
 #endif // _KREDENTIALS_H_

@@ -1,6 +1,10 @@
 ########### next target ###############
 
-set(kredentials_SRCS main.cpp kredentials.cpp krb5_wrap.cpp)
+set(kredentials_SRCS main.cpp kredentials.cpp krb5_wrap.cpp resources.qrc)
+
+qt5_add_resources(kredentials_SRCS resources.qrc)
+
+set(CMAKE_AUTORCC ${AUTOGEN}) #resources
 
 add_executable(kredentials ${kredentials_SRCS})
 
@@ -10,17 +14,14 @@ add_executable(kredentials ${kredentials_SRCS})
 target_link_libraries(kredentials
     Qt5::Widgets
     KF5::CoreAddons
-    KF5::I18n
     KF5::WidgetsAddons
+    KF5::ConfigCore
+    KF5::ConfigGui
+    KF5::DBusAddons
     ${KRB5_LIBRARIES}
 )
 
+########### install files ###############
 install(TARGETS kredentials ${INSTALL_TARGETS_DEFAULT_ARGS})
 
-########### install files ###############
-
-#install(TARGETS kredentials  ${INSTALL_TARGETS_DEFAULT_ARGS})
-
 install(FILES  kredentials.desktop DESTINATION ${XDG_APPS_INSTALL_DIR})
-
-ecm_install_icons(ICONS 16-apps-kredentials.png 32-apps-kredentials.png DESTINATION ${ICON_INSTALL_DIR})
