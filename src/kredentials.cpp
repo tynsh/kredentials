@@ -22,19 +22,19 @@
  */
 
 #include "kredentials.h"
-
-#include <klocale.h>
+#include <klocalizedstring.h>
 #include <QDebug.h>
 #include <kpassworddialog.h>
+// TODO: this now returnes eneums instead of ints. Have to change for future
+// compatibility
 #include <kmessagebox.h>
+// TODO: probably same problem here
 
 // XXX TEMPORARILY disable dcop stuff while porting to KDE4
 #if 0
 // for DCOP access to screen saver
 #include <dcopref.h>
 #endif
-
-//#include <krb5.h>
 
 #include <time.h>
 #include <string.h>
@@ -74,23 +74,23 @@ kredentials::kredentials(int notify)
     generalConfigGroup = KConfigGroup(config, "General");
     setDoAklog(generalConfigGroup.readEntry("RunAklog", true));
 
-    renewAct = new KAction(KIcon("1rightarrow"), i18n("Renew credentials"), this);
+    renewAct = new KAction(KIcon("1rightarrow"), ki18n("Renew credentials"), this);
     connect(renewAct, SIGNAL(triggered()), this, SLOT(tryRenewTickets()));
     contextMenu()->addAction(renewAct);
 
-    freshTixAct = new KAction(KIcon(""), i18n("&Get new credentials"), this);
+    freshTixAct = new KAction(KIcon(""), ki18n("&Get new credentials"), this);
     connect(freshTixAct, SIGNAL(triggered()), this, SLOT(tryPassGetTickets()));
     contextMenu()->addAction(freshTixAct);
 	
-    statusAct = new KAction(KIcon(""), i18n("&Credential Status"), this);
+    statusAct = new KAction(KIcon(""), ki18n("&Credential Status"), this);
     connect(statusAct, SIGNAL(triggered()), this, SLOT(showTicketCache()));
     contextMenu()->addAction(statusAct);
 
-    destroyAct = new KAction(KIcon(""), i18n("&Destroy credentials"), this);
+    destroyAct = new KAction(KIcon(""), ki18n("&Destroy credentials"), this);
     connect(destroyAct, SIGNAL(triggered()), this, SLOT(destroyTickets()));
     contextMenu()->addAction(destroyAct);
 
-    toggleAklogAct = new KToggleAction(i18n("&Renew AFS tokens"), this);
+    toggleAklogAct = new KToggleAction(ki18n("&Renew AFS tokens"), this);
     connect(toggleAklogAct, SIGNAL(triggered()), this, SLOT(prefsAklog()));
     toggleAklogAct->setChecked(doAklog);
     //toggleAklogAct->slotToggled(doAklog);
@@ -121,9 +121,9 @@ void kredentials::prefsAklog() {
 bool kredentials::destroyTickets(){
     bool res=FALSE;
     if(!(res=tixmgr::destroyTickets())){
-	KMessageBox::sorry(0, i18n("Unable to destroy your tickets."), 0, 0);
+	KMessageBox::sorry(0, ki18n("Unable to destroy your tickets."), 0, 0);
     }else{
-	KMessageBox::information(0,i18n("Your tickets have been destroyed."), 
+	KMessageBox::information(0,ki18n("Your tickets have been destroyed."), 
 				 0, 0);
     }
     return res;
@@ -160,13 +160,13 @@ void kredentials::tryPassGetTickets(){
 	bool res=passGetCreds(pass);
 	LOG << "Finished Creds";
 	if(!res){
-	    KMessageBox::sorry(0, i18n("Your password was probably wrong"), 0, 0);
+	    KMessageBox::sorry(0, ki18n("Your password was probably wrong"), 0, 0);
 
 	    break; // I'll try again
 	}else{
 	    hasCurrentTickets();
 	    if( !runAklog() ){
-		KMessageBox::sorry(0, i18n("Unable to run aklog"), 0, 0);
+		KMessageBox::sorry(0, ki18n("Unable to run aklog"), 0, 0);
 	    }
 	    timer->start(1000);
 	    //that's it

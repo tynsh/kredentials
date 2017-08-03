@@ -21,52 +21,61 @@
  */
 
 #include "kredentials.h"
-#include <QApplication.h>
-#include <kaboutdata.h>
-#include <kcmdlineargs.h>
-#include <klocale.h>
-#include <kmainwindow.h>
+#include <QApplication>
+#include <QCommandLineParser>
+#include <KAboutData>
+#include <KLocalizedString>
 
 static const char version[] = "2.0-alpha";
 
 int main(int argc, char **argv)
 {
+	QApplication app(argc, argv);
+
+	app.setOrganizationDomain("org.kde");
+	app.desktopFileName("org.kde.kredentials.desktop");
+
 	KAboutData about("kredentials",
 		"kredentials",
-		ki18n("kredentials"),
+		i18n("kredentials"),
 		version,
-		ki18n("Monitor and update authentication tokens"),
+		i18n("Monitor and update authentication tokens"),
 		KAboutData::License_Custom, 
-		ki18n("(C) 2004 Noah Meyerhans"));
-	about.addAuthor( ki18n("Noah Meyerhans"), ki18n("developer"), 
+		i18n("(C) 2004 Noah Meyerhans"));
+	about.addAuthor( i18n("Noah Meyerhans"), i18n("developer"), 
 		"noahm@csail.mit.edu", 0 );
-	KCmdLineArgs::init(argc, argv, &about);
-	KCmdLineOptions options;
-	options.add("i").add("inform", 
-		 ki18n("Inform the user when credentials are renewed"));
-	options.add("d").add("disable-aklog", 
-		 ki18n("Don't run aklog after renewing Kerberos tickets"));
-	KCmdLineArgs::addCmdLineOptions( options );
-	KUniqueApplication::addCmdLineOptions();
+	KAboutData::setApplicationData(aboutData);
 
-	if (!KUniqueApplication::start()) {
-		kError() << "Kredentials is already running!";
-		exit(0);
-	}
+	QCommandLineParser parser;
+	parser.setApplicationDescription(i18n("Monitor and update authentication tokens"));
+	parser.addHelpOption();
+	parser.addVersionOption();
+	
+	QCommandLineOption informOption(QStringList() << "i" << "inform", i18n("Inform the user when credentials are renewed"));
+	parser.addOption(informOption);
+	QCommandLineOption disableAklogOption(QStringList() << "d" << "disable-aklog", i18n("Don't run aklog after renewing Kerberos tickets"));
+	parser.addOption(disableAklogOption);
 
-	KCmdLineArgs *args = KCmdLineArgs::parsedArgs();
-	KUniqueApplication app;
-	app.disableSessionManagement();
-	kredentials *k_obj = 0;
-	KMainWindow *kmw = new KMainWindow();
-	kmw->setObjectName("kredentials");
+	aboutData.setupCommandLine(&parser);
+	parser.process(app);
+	aboutData.processCommandLine(&parser);
 
-	k_obj = new kredentials();
-	if(args->isSet("inform"))
+	// try to bind to the dbus name and if it fails return 0
+	// TODO
+	//if (!KUniqueApplication::start()) {
+	//	kError() << "Kredentials is already running!";
+	//	exit(0);
+	//}
+
+	MainWindow* mw = new MainWindow();
+	mw->setObjectName("kredentials");
+
+	kredentials* k_obj = new kredentials();
+	if(parser.isSet(informOption))
 	{
 		k_obj->setDoNotify(true);
 	}
-	if(args->isSet("disable-aklog"))
+	if(parser.isSet(disableAklogOption))
 	{
 		k_obj->setDoAklog(false);
 	}

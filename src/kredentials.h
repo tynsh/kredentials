@@ -30,8 +30,10 @@
 
 #include <qtimer.h>
 
-#include <kmenu.h>
-#include <ksystemtrayicon.h>
+#include <kmenu.h> // TODO all of these includes
+//#include <ksystemtrayicon.h>
+#include <QSystemTrayIcon>
+
 #include <kuser.h>
 #include <kaction.h>
 #include <kcomponentdata.h>
